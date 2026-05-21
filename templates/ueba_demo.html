@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧運動科技 - UEBA 即時行為防禦系統</title>
+    <style>
+        :root {
+            --bg-color: #060b16;
+            --text-color: #00f0ff;
+            --panel-bg: rgba(12, 22, 45, 0.85);
+            --border-color: #005577;
+            --alert-color: #ff3333;
+            --success-color: #33ff33;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei";
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+            padding: 25px;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 0;
+            letter-spacing: 2px;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 15px;
+            text-shadow: 0 0 10px var(--text-color);
+        }
+
+        /* 頂部狀態列 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.4);
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .status-indicator {
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        /* 即時監控面板 */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .log-panel {
+            background: #02050a;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            font-size: 14px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .log-line {
+            margin: 5px 0;
+            padding: 4px 8px;
+            border-radius: 3px;
+            border-left: 3px solid #666;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .log-safe {
+            background: rgba(51, 255, 51, 0.05);
+            border-left-color: var(--success-color);
+            color: #a3ffa3;
+        }
+
+        .log-danger {
+            background: rgba(255, 51, 51, 0.12);
+            border-left-color: var(--alert-color);
+            color: #ff8888;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 控制區 */
+        .control-zone {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .btn-start {
+            background: transparent;
+            border: 2px solid var(--text-color);
+            color: var(--text-color);
+            padding: 12px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .btn-start:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 25px var(--text-color);
+        }
+
+        /* 大阻斷彈窗警報 */
+        .blockade-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 0, 0.85);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border: 5px solid var(--alert-color);
+            box-sizing: border-box;
+        }
+
+        .blockade-box {
+            text-align: center;
+            color: var(--alert-color);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.98); text-shadow: 0 0 10px rgba(255,51,51,0.5); }
+            100% { transform: scale(1.02); text-shadow: 0 0 30px rgba(255,51,51,1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    <h1>【智慧運動科技 - UEBA AI 行為分析即時主控台】</h1>
+    
+    <!-- 頂部狀態 -->
+    <div class="status-bar">
+        <div>👤 目前登入令牌擁有者：<span style="color:#fff;">小明 (Xiao-Ming)</span></div>
+        <div>系統防禦狀態：<span class="status-indicator" id="systemStatus">🟢 監控中 (MONITORING)</span></div>
+    </div>
+
+    <!-- 即時日誌面板 -->
+    <div class="monitor-grid">
+        <div style="margin-bottom: 5px;">📡 核心 AI 串流行為特徵審查日誌 (Real-time UEBA Log):</div>
+        <div class="log-panel" id="logPanel">
+            <div style="color: #666;">[系統提示] 等待防禦端點啟動...</div>
+        </div>
+    </div>
+
+    <!-- 按鈕 -->
+    <div class="control-zone">
+        <button class="btn-start" id="startBtn" onclick="startStreamingUEBA()">啟動即時行為防禦鏈</button>
+    </div>
+</div>
+
+<!-- 終極威脅阻斷彈窗 -->
+<div class="blockade-overlay" id="blockadeOverlay">
+    <div class="blockade-box">
+        <h1 style="font-size: 50px; color: var(--alert-color); border: none; text-shadow: 0 0 20px #ff0000;">⚠️ ACCESS DENIED ⚠️</h1>
+        <p style="font-size: 24px; color: #fff;">[ UEBA 系統主動防禦：不合規行為特徵阻斷 ]</p>
+        <p style="font-size: 18px; color: #aaa;" id="blockadeDetails">惡意流量特徵比對完成。帳號已即時自動鎖定，Token 立即失效！</p>
+        <button style="margin-top:20px; background:#ff3333; color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:bold;" onclick="closeOverlay()">重設防禦系統</button>
+    </div>
+</div>
+
+<script>
+    let timer = null;
+    let tickCount = 0;
+
+    function startStreamingUEBA() {
+        // 重設狀態
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('startBtn').style.opacity = '0.5';
+        const logPanel = document.getElementById('logPanel');
+        logPanel.innerHTML = '<div style="color: #00f0ff;">[系統初始化] AI 即時防禦常駐程式啟動，開始攔截行為特徵...</div>';
+        
+        tickCount = 0;
+        
+        // 設定每 0.5 秒 (500毫秒) 發送一次數據給後端
+        timer = setInterval(sendDataPoint, 500);
+    }
+
+    function sendDataPoint() {
+        tickCount++;
+        let payload = {};
+        let userIdentity = "";
+
+        // 💡 關鍵時間軸劇本控制
+        if (tickCount <= 10) {
+            // 【第 0 ~ 5 秒】：真的是小明在用
+            // 模擬正常行為：晚上 21 點左右，打字速度在 55 ~ 65 之間波動
+            const simulatedSpeed = Math.floor(55 + Math.random() * 10);
+            payload = { login_time: 21.2, typing_speed: simulatedSpeed };
+            userIdentity = "小明本人";
+        } else {
+            // 【第 5 秒過後】：駭客突然切入，使用偷來的 Token 大規模作案
+            // 模擬異常行為：凌晨 3 點 15 分，打字速度飆到 600
+            payload = { login_time: 3.25, typing_speed: 600 };
+            userIdentity = "☠️ 突發異常流量(Token持有者)";
+        }
+
+        // 發送給 Flask 進行真正的 ML 預測
+        fetch('/api/stream_analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            const logPanel = document.getElementById('logPanel');
+            const now = new Date().toLocaleTimeString();
+            
+            // 建立日誌行 HTML
+            const logLine = document.createElement('div');
+            logLine.className = `log-line ${data.status === 'danger' ? 'log-danger' : 'log-safe'}`;
+            
+            logLine.innerHTML = `
+                [${now}] 來源標籤: ${userIdentity} | 
+                傳入特徵 -> 登入時間: ${data.current_data.time} 點, 打字速度: ${data.current_data.speed}字/分 | 
+                AI 判定: ${data.message} (遭冒用機率: ${data.probability}%)
+            `;
+            
+            logPanel.appendChild(logLine);
+            logPanel.scrollTop = logPanel.scrollHeight; // 日誌自動滾動到最下方
+
+            // 如果 AI 判定為危險，發動即時封鎖，終止定時器，彈出全螢幕阻斷
+            if (data.status === 'danger') {
+                clearInterval(timer);
+                
+                // 動態效果延遲一下下，讓評審看清楚紅字爆發的瞬間，再跳阻斷彈窗
+                setTimeout(() => {
+                    document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
+                    document.getElementById('systemStatus').style.color = "#ff3333";
+                    document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${data.probability}%。系統已於第 5.5 秒主動發射防禦指令，攔截詐騙訊息。`;
+                    document.getElementById('blockadeOverlay').style.display = 'flex';
+                }, 800);
+            }
+        })
+        .catch(err => console.error("監控串流中斷:", err));
+    }
+
+    function closeOverlay() {
+        document.getElementById('blockadeOverlay').style.style.display = 'none';
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').style.opacity = '1';
+        document.getElementById('systemStatus').innerText = "🟢 監控中 (MONITORING)";
+        document.getElementById('systemStatus').style.color = "#33ff33";
+        document.getElementById('mainContainer').style.border = '2px solid #005577';
+        document.getElementById('mainContainer').style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.15)';
+    }
+</script>
+
+</body>
+</html>
