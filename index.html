@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧運動科技 - UEBA 即時行為防禦系統</title>
+    <title>智慧運動科技 - UEBA AI 行為分析即時主控台 (Demo)</title>
     <style>
         :root {
             --bg-color: #060b16;
@@ -48,7 +48,6 @@
             text-shadow: 0 0 10px var(--text-color);
         }
 
-        /* 頂部狀態列 */
         .status-bar {
             display: flex;
             justify-content: space-between;
@@ -64,7 +63,6 @@
             color: var(--success-color);
         }
 
-        /* 即時監控面板 */
         .monitor-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -108,7 +106,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 控制區 */
         .control-zone {
             text-align: center;
             margin-top: 25px;
@@ -133,7 +130,6 @@
             box-shadow: 0 0 25px var(--text-color);
         }
 
-        /* 大阻斷彈窗警報 */
         .blockade-overlay {
             display: none;
             position: fixed;
@@ -164,13 +160,11 @@
 <div class="container" id="mainContainer">
     <h1>【智慧運動科技 - UEBA AI 行為分析即時主控台】</h1>
     
-    <!-- 頂部狀態 -->
     <div class="status-bar">
         <div>👤 目前登入令牌擁有者：<span style="color:#fff;">小明 (Xiao-Ming)</span></div>
         <div>系統防禦狀態：<span class="status-indicator" id="systemStatus">🟢 監控中 (MONITORING)</span></div>
     </div>
 
-    <!-- 即時日誌面板 -->
     <div class="monitor-grid">
         <div style="margin-bottom: 5px;">📡 核心 AI 串流行為特徵審查日誌 (Real-time UEBA Log):</div>
         <div class="log-panel" id="logPanel">
@@ -178,13 +172,12 @@
         </div>
     </div>
 
-    <!-- 按鈕 -->
     <div class="control-zone">
         <button class="btn-start" id="startBtn" onclick="startStreamingUEBA()">啟動即時行為防禦鏈</button>
     </div>
 </div>
 
-<!-- 終極威脅阻斷彈窗 -->
+<!-- 阻斷彈窗 -->
 <div class="blockade-overlay" id="blockadeOverlay">
     <div class="blockade-box">
         <h1 style="font-size: 50px; color: var(--alert-color); border: none; text-shadow: 0 0 20px #ff0000;">⚠️ ACCESS DENIED ⚠️</h1>
@@ -199,85 +192,79 @@
     let tickCount = 0;
 
     function startStreamingUEBA() {
-        // 重設狀態
         document.getElementById('startBtn').disabled = true;
         document.getElementById('startBtn').style.opacity = '0.5';
         const logPanel = document.getElementById('logPanel');
         logPanel.innerHTML = '<div style="color: #00f0ff;">[系統初始化] AI 即時防禦常駐程式啟動，開始攔截行為特徵...</div>';
         
         tickCount = 0;
-        
-        // 設定每 0.5 秒 (500毫秒) 發送一次數據給後端
-        timer = setInterval(sendDataPoint, 500);
+        // 每 0.5 秒驅動一次前端模擬分析
+        timer = setInterval(simulateUEBAEngine, 500);
     }
 
-    function sendDataPoint() {
+    // 💡 這裡直接在前端接管原本 Flask 後端的 AI 判定邏輯！
+    function simulateUEBAEngine() {
         tickCount++;
-        let payload = {};
+        let status = "safe";
+        let probability = 0;
+        let message = "";
         let userIdentity = "";
+        let current_data = {};
 
-        // 💡 關鍵時間軸劇本控制
         if (tickCount <= 10) {
-            // 【第 0 ~ 5 秒】：真的是小明在用
-            // 模擬正常行為：晚上 21 點左右，打字速度在 55 ~ 65 之間波動
-            const simulatedSpeed = Math.floor(55 + Math.random() * 10);
-            payload = { login_time: 21.2, typing_speed: simulatedSpeed };
+            // 【前 5 秒】：模擬小明本人的正常數據
+            const simulatedSpeed = Math.floor(55 + Math.random() * 10); // 55~64字之間跳動
+            current_data = { time: 21.2, speed: simulatedSpeed };
             userIdentity = "小明本人";
+            status = "safe";
+            // 隨機產生極低的正常偏離率
+            probability = (Math.random() * 2.5).toFixed(1);
+            message = "🟢 行為特徵完全符合使用者基準";
         } else {
-            // 【第 5 秒過後】：駭客突然切入，使用偷來的 Token 大規模作案
-            // 模擬異常行為：凌晨 3 點 15 分，打字速度飆到 600
-            payload = { login_time: 3.25, typing_speed: 600 };
+            // 【5 秒過後】：模擬駭客突發流量
+            current_data = { time: 3.25, speed: 600 };
             userIdentity = "☠️ 突發異常流量(Token持有者)";
+            status = "danger";
+            // 模擬高危險冒用機率
+            probability = (98.5 + Math.random() * 1.3).toFixed(1);
+            message = "🚨 偵測到行為特徵劇烈異變！Token 被冒用！";
         }
 
-        // 發送給 Flask 進行真正的 ML 預測
-        fetch('/api/stream_analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            const logPanel = document.getElementById('logPanel');
-            const now = new Date().toLocaleTimeString();
-            
-            // 建立日誌行 HTML
-            const logLine = document.createElement('div');
-            logLine.className = `log-line ${data.status === 'danger' ? 'log-danger' : 'log-safe'}`;
-            
-            logLine.innerHTML = `
-                [${now}] 來源標籤: ${userIdentity} | 
-                傳入特徵 -> 登入時間: ${data.current_data.time} 點, 打字速度: ${data.current_data.speed}字/分 | 
-                AI 判定: ${data.message} (遭冒用機率: ${data.probability}%)
-            `;
-            
-            logPanel.appendChild(logLine);
-            logPanel.scrollTop = logPanel.scrollHeight; // 日誌自動滾動到最下方
+        // 渲染日誌到網頁畫面上
+        const logPanel = document.getElementById('logPanel');
+        const now = new Date().toLocaleTimeString();
+        const logLine = document.createElement('div');
+        logLine.className = `log-line ${status === 'danger' ? 'log-danger' : 'log-safe'}`;
+        
+        logLine.innerHTML = `
+            [${now}] 來源標籤: ${userIdentity} | 
+            傳入特徵 -> 登入時間: ${current_data.time} 點, 打字速度: ${current_data.speed}字/分 | 
+            AI 判定: ${message} (遭冒用機率: ${probability}%)
+        `;
+        
+        logPanel.appendChild(logLine);
+        logPanel.scrollTop = logPanel.scrollHeight;
 
-            // 如果 AI 判定為危險，發動即時封鎖，終止定時器，彈出全螢幕阻斷
-            if (data.status === 'danger') {
-                clearInterval(timer);
-                
-                // 動態效果延遲一下下，讓評審看清楚紅字爆發的瞬間，再跳阻斷彈窗
-                setTimeout(() => {
-                    document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
-                    document.getElementById('systemStatus').style.color = "#ff3333";
-                    document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${data.probability}%。系統已於第 5.5 秒主動發射防禦指令，攔截詐騙訊息。`;
-                    document.getElementById('blockadeOverlay').style.display = 'flex';
-                }, 800);
-            }
-        })
-        .catch(err => console.error("監控串流中斷:", err));
+        // 異常阻斷機制
+        if (status === 'danger') {
+            clearInterval(timer);
+            
+            setTimeout(() => {
+                document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
+                document.getElementById('systemStatus').style.color = "#ff3333";
+                document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 5.5 秒主動發射防禦指令，攔截詐騙訊息。`;
+                document.getElementById('blockadeOverlay').style.display = 'flex';
+            }, 800);
+        }
     }
 
     function closeOverlay() {
-        document.getElementById('blockadeOverlay').style.style.display = 'none';
+        document.getElementById('blockadeOverlay').style.display = 'none';
         document.getElementById('startBtn').disabled = false;
         document.getElementById('startBtn').style.opacity = '1';
         document.getElementById('systemStatus').innerText = "🟢 監控中 (MONITORING)";
         document.getElementById('systemStatus').style.color = "#33ff33";
-        document.getElementById('mainContainer').style.border = '2px solid #005577';
-        document.getElementById('mainContainer').style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.15)';
+        document.getElementById('logPanel').innerHTML = '<div style="color: #666;">[系統提示] 等待防禦端點啟動...</div>';
     }
 </script>
 
