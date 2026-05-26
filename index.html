@@ -211,7 +211,7 @@
         let userIdentity = "";
         let current_data = {};
 
-        if (tickCount <= 10) {
+        if (tickCount <= 40) {
             // 【前 5 秒】：模擬小明本人的正常數據
             const simulatedSpeed = Math.floor(55 + Math.random() * 10); // 55~64字之間跳動
             current_data = { time: 21.2, speed: simulatedSpeed };
