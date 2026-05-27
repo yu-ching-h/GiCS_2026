@@ -177,7 +177,6 @@
     </div>
 </div>
 
-<!-- 阻斷彈窗 -->
 <div class="blockade-overlay" id="blockadeOverlay">
     <div class="blockade-box">
         <h1 style="font-size: 50px; color: var(--alert-color); border: none; text-shadow: 0 0 20px #ff0000;">⚠️ ACCESS DENIED ⚠️</h1>
@@ -202,7 +201,6 @@
         timer = setInterval(simulateUEBAEngine, 500);
     }
 
-    // 💡 這裡直接在前端接管原本 Flask 後端的 AI 判定邏輯！
     function simulateUEBAEngine() {
         tickCount++;
         let status = "safe";
@@ -211,21 +209,20 @@
         let userIdentity = "";
         let current_data = {};
 
+        // 💡 修改此處：每 0.5 秒一次，前 20 秒等於跑 40 次 tick
         if (tickCount <= 40) {
-            // 【前 5 秒】：模擬小明本人的正常數據
+            // 【前 20 秒】：模擬小明本人的正常數據
             const simulatedSpeed = Math.floor(55 + Math.random() * 10); // 55~64字之間跳動
             current_data = { time: 21.2, speed: simulatedSpeed };
             userIdentity = "小明本人";
             status = "safe";
-            // 隨機產生極低的正常偏離率
             probability = (Math.random() * 2.5).toFixed(1);
             message = "🟢 行為特徵完全符合使用者基準";
         } else {
-            // 【5 秒過後】：模擬駭客突發流量
+            // 【20 秒過後】：模擬駭客突發流量
             current_data = { time: 3.25, speed: 600 };
             userIdentity = "☠️ 突發異常流量(Token持有者)";
             status = "danger";
-            // 模擬高危險冒用機率
             probability = (98.5 + Math.random() * 1.3).toFixed(1);
             message = "🚨 偵測到行為特徵劇烈異變！Token 被冒用！";
         }
@@ -252,7 +249,8 @@
             setTimeout(() => {
                 document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
                 document.getElementById('systemStatus').style.color = "#ff3333";
-                document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 5.5 秒主動發射防禦指令，攔截詐騙訊息。`;
+                // 💡 同步將彈窗內的文字更新為「第 20.5 秒主動發射防禦指令」
+                document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 20.5 秒主動發射防禦指令，攔截詐騙訊息。`;
                 document.getElementById('blockadeOverlay').style.display = 'flex';
             }, 800);
         }
