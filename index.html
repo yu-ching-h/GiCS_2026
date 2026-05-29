@@ -189,6 +189,9 @@
 <script>
     let timer = null;
     let tickCount = 0;
+    
+    // 💡 調整這裡可以決定小明正常狀態要維持多久 (秒數)
+    const NORMAL_DURATION_SECONDS = 60; 
 
     function startStreamingUEBA() {
         document.getElementById('startBtn').disabled = true;
@@ -209,9 +212,11 @@
         let userIdentity = "";
         let current_data = {};
 
-        // 💡 修改此處：每 0.5 秒一次，前 20 秒等於跑 40 次 tick
-        if (tickCount <= 40) {
-            // 【前 20 秒】：模擬小明本人的正常數據
+        // 每秒跑 2 次 tick，所以乘 2
+        const maxNormalTicks = NORMAL_DURATION_SECONDS * 2; 
+
+        if (tickCount <= maxNormalTicks) {
+            // 【正常時間內】：模擬小明本人的正常數據
             const simulatedSpeed = Math.floor(55 + Math.random() * 10); // 55~64字之間跳動
             current_data = { time: 21.2, speed: simulatedSpeed };
             userIdentity = "小明本人";
@@ -219,7 +224,7 @@
             probability = (Math.random() * 2.5).toFixed(1);
             message = "🟢 行為特徵完全符合使用者基準";
         } else {
-            // 【20 秒過後】：模擬駭客突發流量
+            // 【超過設定時間】：模擬駭客突發流量
             current_data = { time: 3.25, speed: 600 };
             userIdentity = "☠️ 突發異常流量(Token持有者)";
             status = "danger";
@@ -247,10 +252,14 @@
             clearInterval(timer);
             
             setTimeout(() => {
+                // 計算實際被攔截的精確秒數 (觸發異常通常是在正常時間過後的 0.5 秒)
+                const actionSecond = NORMAL_DURATION_SECONDS + 0.5;
+                
                 document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
                 document.getElementById('systemStatus').style.color = "#ff3333";
-                // 💡 同步將彈窗內的文字更新為「第 20.5 秒主動發射防禦指令」
-                document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 20.5 秒主動發射防禦指令，攔截詐騙訊息。`;
+                
+                // 動態更新彈窗內的秒數文字
+                document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 ${actionSecond} 秒主動發射防禦指令，攔截詐騙訊息。`;
                 document.getElementById('blockadeOverlay').style.display = 'flex';
             }, 800);
         }
