@@ -189,10 +189,10 @@
 <script>
     let timer = null;
     let tickCount = 0;
-    let dangerTickCount = 0; // 新增：用來記錄紅色錯誤跑了幾次
+    let dangerTickCount = 0; 
 
     // 💡 調整這裡：決定紅色攻擊流量要「停留/持續噴發」多少次（每 1 次 = 0.5 秒）
-    const DANGER_LOG_COUNT = 10; 
+    const DANGER_LOG_COUNT = 40; 
 
     function startStreamingUEBA() {
         document.getElementById('startBtn').disabled = true;
@@ -201,7 +201,7 @@
         logPanel.innerHTML = '<div style="color: #00f0ff;">[系統初始化] AI 即時防禦常駐程式啟動，開始攔截行為特徵...</div>';
         
         tickCount = 0;
-        dangerTickCount = 0; // 重設紅色計數
+        dangerTickCount = 0; 
         timer = setInterval(simulateUEBAEngine, 500);
     }
 
@@ -210,51 +210,48 @@
         let probability = 0;
         let message = "";
         let userIdentity = "";
-        let current_data = {};
+        let logTime = ""; // 用來存儲要放在最前面的模擬時間
 
-        // 【前 20 秒 (40 次 tick)】：模擬小明本人的正常數據
+        // 【前 2 次 tick】：模擬小明本人的正常數據
         if (tickCount < 40) {
             tickCount++;
             const simulatedSpeed = Math.floor(55 + Math.random() * 10); 
-            current_data = { time: 21.2, speed: simulatedSpeed };
+            logTime = "21:00"; // 📝 正常時間放到最前面
             userIdentity = "小明本人";
             status = "safe";
             probability = (Math.random() * 2.5).toFixed(1);
-            message = "🟢 行為特徵完全符合使用者基準";
+            message = `🟢 行為特徵完全符合使用者基準 (打字速度: ${simulatedSpeed}字/分)`;
         } else {
-            // 【20 秒過後】：進入異常狀態
+            // 【異常狀態】
             dangerTickCount++;
             
-            // 讓上方的系統防禦狀態列，在第一次發現異常時就立刻變紅，增加緊張感
             if (dangerTickCount === 1) {
                 document.getElementById('systemStatus').innerText = "⚠️ 偵測到異常流量分析中...";
                 document.getElementById('systemStatus').style.color = "#ffaa00";
             }
 
-            const simulatedSpeed = Math.floor(590 + Math.random() * 20); // 讓異常打字速度有微幅動態跳動（590~610）
-            current_data = { time: 3.25, speed: simulatedSpeed };
+            const simulatedSpeed = Math.floor(590 + Math.random() * 20); 
+            logTime = "03:00"; // 📝 攻擊時間放到最前面
             userIdentity = "☠️ 突發異常流量(Token持有者)";
             status = "danger";
             probability = (98.5 + Math.random() * 1.3).toFixed(1);
-            message = "🚨 偵測到行為特徵劇烈異變！Token 被冒用！";
+            message = `🚨 偵測到行為特徵劇烈異變！Token 被冒用！(打字速度: ${simulatedSpeed}字/分)`;
         }
 
         // 渲染日誌到網頁畫面上
         const logPanel = document.getElementById('logPanel');
-        const now = new Date().toLocaleTimeString();
         const logLine = document.createElement('div');
         logLine.className = `log-line ${status === 'danger' ? 'log-danger' : 'log-safe'}`;
         
+        // 📝 修改處：把原本的現在時間 [now] 換成模擬的 [logTime]，並移除了後面的「傳入特徵 -> 登入時間」
         logLine.innerHTML = `
-            [${now}] 來源標籤: ${userIdentity} | 
-            傳入特徵 -> 登入時間: ${current_data.time} 點, 打字速度: ${current_data.speed}字/分 | 
+            [${logTime}] 來源標籤: ${userIdentity} | 
             AI 判定: ${message} (遭冒用機率: ${probability}%)
         `;
         
         logPanel.appendChild(logLine);
         logPanel.scrollTop = logPanel.scrollHeight;
 
-        // 當紅色框框噴滿指定的次數後，才執行中斷並跳出鎖定視窗
         if (dangerTickCount >= DANGER_LOG_COUNT) {
             clearInterval(timer);
             
@@ -262,7 +259,6 @@
                 document.getElementById('systemStatus').innerText = "🔴 帳號已鎖定 (BLOCKED)";
                 document.getElementById('systemStatus').style.color = "#ff3333";
                 
-                // 動態計算包含紅色異常持續時間的總秒數
                 const totalSeconds = (40 * 0.5) + (DANGER_LOG_COUNT * 0.5);
                 document.getElementById('blockadeDetails').innerText = `偵測到當前流量與原用戶 Baseline 嚴重不符。AI 判定遭冒用率：${probability}%。系統已於第 ${totalSeconds} 秒主動發射防禦指令，攔截詐騙訊息。`;
                 document.getElementById('blockadeOverlay').style.display = 'flex';
